@@ -1,9 +1,9 @@
 {
-  "name": "goku-scripts",
-  "version": "0.0.1",
+  "name": "pandora-scripts",
+  "version": "1.0.0",
   "description": "vue dev and build scripts",
   "bin": {
-    "goku-scripts": "./bin/index.js"
+    "pandora-scripts": "./bin/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
