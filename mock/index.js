@@ -16,7 +16,7 @@ var configFile = resolve('./mock.config.js')
 var mockDir = resolve('./mock/')
 var appDirectory = resolve()
 
-var debug = require('debug')('goku:mock');
+var debug = require('debug')('pandora:mock');
 
 function getConfig() {
 	if (existsSync(configFile)) {
@@ -58,11 +58,13 @@ function createMockHandler(method, path, value) {
 }
 
 function createProxy(path, target) {
-
-  // TODO: 支持对象传递
-  var options = {
-    target
-  }
+	var options = {}
+	if (typeof target === 'string') {
+		options.target = target
+	} else {
+		options = Object.assign(options, target)
+	}	
+  
   return proxyMiddleware(path, options)
 }
 
@@ -86,6 +88,8 @@ function outputError() {
 
 function realApplyMock(app) {
 	var config = getConfig();
+	var proxy = config.proxy || {}; 
+	var mock = config.mock || {};
 
 	app.use(bodyParser.json({ limit: '5mb' }));
 	app.use(
@@ -95,28 +99,38 @@ function realApplyMock(app) {
 	  }),
 	);
 
-	Object.keys(config).forEach(key => {
-	  var keyParsed = parseKey(key);
-	  assert(
-		typeof config[key] === 'function' ||
-		  typeof config[key] === 'object' ||
-		  typeof config[key] === 'string',
-		`mock value of ${key} should be function or object or string, but got ${typeof config[
-		  key
-		]}`,
-	  );
-	  if (typeof config[key] === 'string') {
-		var { path } = keyParsed;
+	if (proxy.enable) {
+		console.log()
+		console.log("pandora:mock open global proxy")
+		var path = proxy.path || '/api';
+		var options = proxy.options || {};
+		app.use(path, createProxy(path, options));
+	} else {
+		Object.keys(mock).forEach(key => {
+			var keyParsed = parseKey(key);
+			assert(
+			typeof mock[key] === 'function' ||
+				typeof mock[key] === 'object' ||
+				typeof mock[key] === 'string',
+			`mock value of ${key} should be function or object or string, but got ${typeof mock[
+				key
+			]}`,
+			);
+			if (typeof mock[key] === 'string') {
+				var { path } = keyParsed;
+	
+				// 单独开启代理转发
+				app.use(path, createProxy(path, mock[key]));
+			} else {
 
-		// 代理转发
-		app.use(path, createProxy(path, config[key]));
-	  } else {
-		app[keyParsed.method](
-		  keyParsed.path,
-		  createMockHandler(keyParsed.method, keyParsed.path, config[key]),
-		);
-	  }
-	});
+				// 加载本地json数据
+				app[keyParsed.method](
+					keyParsed.path,
+					createMockHandler(keyParsed.method, keyParsed.path, mock[key]),
+				);
+			}
+		});
+	}
 
   var startIndex = null;
   var lastIndex = null;
