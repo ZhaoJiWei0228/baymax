@@ -150,8 +150,8 @@ function realApplyMock(app) {
       mockAPILength = app._router.stack.length - startIndex;
       var newStack = app._router.stack.splice(startIndex, mockAPILength);
       app._router.stack.splice(lastIndex - 1, 0, ...newStack);
-      startIndex = lastIndex
-      lastIndex = startIndex + mockAPILength
+      startIndex = lastIndex - 1
+      lastIndex = startIndex + mockAPILength + 1
     } else {
       mockAPILength = lastIndex - 2;
     }
