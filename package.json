@@ -1,9 +1,9 @@
 {
-  "name": "pandora-scripts",
+  "name": "baymax-scripts",
   "version": "1.0.0",
   "description": "vue dev and build scripts",
   "bin": {
-    "pandora-scripts": "./bin/index.js"
+    "baymax-scripts": "./bin/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -58,6 +58,7 @@
     "less": "^2.7.2",
     "less-loader": "^4.0.5",
     "lodash": "^4.17.4",
+    "mockjs": "^1.0.1-beta3",
     "opn": "^5.1.0",
     "optimize-css-assets-webpack-plugin": "^2.0.0",
     "rimraf": "^2.6.0",

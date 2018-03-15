@@ -2,6 +2,7 @@ var assert = require('assert')
 var fs = require('fs')
 var chokidar = require('chokidar')
 var chalk = require('chalk')
+var Mock = require('mockjs')
 var url = require('url')
 var path = require('path')
 var bodyParser = require('body-parser')
@@ -16,7 +17,7 @@ var configFile = resolve('./mock.config.js')
 var mockDir = resolve('./mock/')
 var appDirectory = resolve()
 
-var debug = require('debug')('pandora:mock');
+var debug = require('debug')('baymax:mock');
 
 function getConfig() {
 	if (existsSync(configFile)) {
@@ -52,7 +53,7 @@ function createMockHandler(method, path, value) {
 	  if (typeof value === 'function') {
 		value(...args);
 	  } else {
-		res.json(value);
+		res.json(Mock.mock(value));
 	  }
 	};
 }
@@ -101,7 +102,7 @@ function realApplyMock(app) {
 
 	if (proxy.enable) {
 		console.log()
-		console.log("pandora:mock open global proxy")
+		console.log("baymax:mock open global proxy")
 		var path = proxy.path || '/api';
 		var options = proxy.options || {};
 		app.use(path, createProxy(path, options));
@@ -178,7 +179,8 @@ function applyMock(app) {
 		realApplyMock(app);
 		error = null;
 	} catch (e) {
-		console.log(e);
+		
+		// console.log(e);
 		error = e;
 
 		console.log();
@@ -194,7 +196,7 @@ function applyMock(app) {
 				path.replace(appDirectory, '.'),
 			);
 			watcher.close();
-			applyMock(devServer);
+			applyMock(app);
 		});
 	}
 }

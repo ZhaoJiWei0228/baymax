@@ -1,4 +1,4 @@
-# pandora-scripts
+# baymax-scripts
 
 vue dev and build scripts
 
@@ -10,9 +10,9 @@ vue dev and build scripts
 
 ```
 # 开发模式
-pandora-scripts start
+baymax-scripts start
 # 生产模式
-pandora-scripts build
+baymax-scripts build
 # 打包dll文件
-pandora-scripts dll
+baymax-scripts dll
 ```
