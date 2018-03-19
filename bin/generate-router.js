@@ -133,18 +133,28 @@ function recursiveRoutes(routes, components) {
 }
 
 function generateRoutesAndFiles() {
+  var file = 'router.js'
+  var declaration = 'let routes' 
+  var disable = '/* eslint-disable */\n'
+
+  if (config.typescript) {
+    file = 'router.ts'
+    declaration = 'import { RouteConfig } from \'vue-router\'\nlet routes: RouteConfig[]'
+    disable = '/* tslint:disable */\n'
+  }
+
   return new Promise((resolve, reject) => {
     glob('src/pages/**/*.@(vue|js)', { nonull: false, ignore: config.routeIgnore }, (err, files) => {
       if (err) throw err
       if (!files.length) {
-        fs.writeFile('./src/router/router.js', 'let routes = []\nexport default routes\n', (_err) => {
+        fs.writeFile(`./src/router/${file}`, `${declaration} = []\nexport default routes\n`, (_err) => {
           if (_err) throw _err
           resolve()
         })
       } else {
         let routes = createRoutes(files)
         let components = []
-        let fileContent = '/* eslint-disable */\n'
+        let fileContent = disable
         let routesStr
         recursiveRoutes(routes, components)
         _.uniqBy(components, 'name').forEach(d => {
@@ -155,8 +165,8 @@ function generateRoutesAndFiles() {
         routesStr = JSON.stringify(routes, null, 2)
           .replace(/"component": "(\w+?)"/g, `"component": $1`)
           .replace(/"(\w+?)":/g, '$1:')
-        fileContent += `\nlet routes = ${routesStr}\n\nexport default routes\n`
-        fs.writeFile('./src/router/router.js', fileContent, (_err) => {
+        fileContent += `\n${declaration} = ${routesStr}\n\nexport default routes\n`
+        fs.writeFile(`./src/router/${file}`, fileContent, (_err) => {
           if (_err) throw _err
           resolve()
         })

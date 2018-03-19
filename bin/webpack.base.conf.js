@@ -5,6 +5,7 @@ var utils = require('../utils')
 var config = require('../config')
 var vueLoaderConfig = require('./vue-loader.conf')
 var StyleLintPlugin = require('stylelint-webpack-plugin')
+var ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 var htmlPluginConf = require('./html-plugin.conf')
 
 var customExts = config.custom.extensions || []
@@ -26,8 +27,8 @@ var webpackConf = {
       : config.dev.assetsPublicPath
   },
   resolve: {
-	modules: [path.resolve(__dirname, '../', 'node_modules'), 'node_modules'],
-    extensions: uniqExtensions([ '.js', '.vue', '.json' ], customExts),
+    modules: [path.resolve(__dirname, '../', 'node_modules'), 'node_modules'],
+    extensions: uniqExtensions(['.js', '.vue', '.json'], customExts),
     alias: Object.assign({
       'vue$': 'vue/dist/vue.esm.js'
     }, config.custom.alias)
@@ -88,6 +89,33 @@ var webpackConf = {
     ]
   },
   plugins: []
+}
+
+if (config.typescript) {
+  webpackConf.resolve.extensions = uniqExtensions(webpackConf.resolve.extensions, ['.ts', '.tsx'])
+  webpackConf.module.rules.unshift(
+    {
+      test: /\.tsx?$/,
+      exclude: /node_modules/,
+      enforce: 'pre',
+      loader: 'tslint-loader'
+    },
+    {
+      test: /\.tsx?$/,
+      exclude: /node_modules/,
+      use: [
+        "babel-loader",
+        {
+          loader: "ts-loader",
+          options: { 
+            transpileOnly: true,
+            appendTsxSuffixTo: [/\.vue$/] 
+          }
+        }
+      ]
+    }
+  )
+  webpackConf.plugins.push(new ForkTsCheckerWebpackPlugin())
 }
 
 if (config.custom.eslint && config.custom.eslint.enable) {

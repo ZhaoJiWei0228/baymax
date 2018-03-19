@@ -72,6 +72,7 @@ module.exports = {
       }
     }
   })(),
+  typescript: customConf.typescript,
   entry: customConf.entry || './src/main',
   routePrefix: (customConf.router.routePrefix || '').replace(/\/$/, ''),
   routeIgnore: customConf.router.ignore,
