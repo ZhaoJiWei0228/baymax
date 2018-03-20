@@ -65,7 +65,7 @@ function createProxy(path, target) {
 	} else {
 		options = Object.assign(options, target)
 	}	
-  
+
   return proxyMiddleware(path, options)
 }
 
@@ -123,12 +123,19 @@ function realApplyMock(app) {
 				// 单独开启代理转发
 				app.use(path, createProxy(path, mock[key]));
 			} else {
+				if (typeof mock[key] === 'object' && mock[key].target != null) {
+					var { path } = keyParsed;
 
-				// 加载本地json数据
-				app[keyParsed.method](
-					keyParsed.path,
-					createMockHandler(keyParsed.method, keyParsed.path, mock[key]),
-				);
+					// 单独开启代理转发，自定义代理配置
+					app.use(path, createProxy(path, mock[key]));
+				} else {
+					
+					// 加载本地json数据
+					app[keyParsed.method](
+						keyParsed.path,
+						createMockHandler(keyParsed.method, keyParsed.path, mock[key]),
+					);
+				}
 			}
 		});
 	}
