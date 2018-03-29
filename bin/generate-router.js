@@ -133,12 +133,13 @@ function recursiveRoutes(routes, components) {
 }
 
 function generateRoutesAndFiles() {
-  var file = 'router.js'
+  var dir = 'routes'
+  var file = 'index.js'
   var declaration = 'let routes' 
   var disable = '/* eslint-disable */\n'
 
   if (config.typescript) {
-    file = 'router.ts'
+    file = 'index.ts'
     declaration = 'import { RouteConfig } from \'vue-router\'\nlet routes: RouteConfig[]'
     disable = '/* tslint:disable */\n'
   }
@@ -147,7 +148,7 @@ function generateRoutesAndFiles() {
     glob('src/pages/**/*.@(vue|js)', { nonull: false, ignore: config.routeIgnore }, (err, files) => {
       if (err) throw err
       if (!files.length) {
-        fs.writeFile(`./src/router/${file}`, `${declaration} = []\nexport default routes\n`, (_err) => {
+        fs.writeFile(`./src/${dir}/${file}`, `${declaration} = []\nexport default routes\n`, (_err) => {
           if (_err) throw _err
           resolve()
         })
@@ -166,7 +167,7 @@ function generateRoutesAndFiles() {
           .replace(/"component": "(\w+?)"/g, `"component": $1`)
           .replace(/"(\w+?)":/g, '$1:')
         fileContent += `\n${declaration} = ${routesStr}\n\nexport default routes\n`
-        fs.writeFile(`./src/router/${file}`, fileContent, (_err) => {
+        fs.writeFile(`./src/${dir}/${file}`, fileContent, (_err) => {
           if (_err) throw _err
           resolve()
         })
