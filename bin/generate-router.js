@@ -134,12 +134,12 @@ function recursiveRoutes(routes, components) {
 
 function generateRoutesAndFiles() {
   var dir = 'routes'
-  var file = 'index.js'
+  var file = 'routes.js'
   var declaration = 'let routes' 
   var disable = '/* eslint-disable */\n'
 
   if (config.typescript) {
-    file = 'index.ts'
+    file = 'routes.ts'
     declaration = 'import { RouteConfig } from \'vue-router\'\nlet routes: RouteConfig[]'
     disable = '/* tslint:disable */\n'
   }
