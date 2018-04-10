@@ -17,18 +17,18 @@ function getCopyAssets () {
   var css = config.css
   var arr = []
   externals.forEach(function (d) {
-    if (!/^(\/static)/g.test(d.path)) {
+    if (!/^(\/static)/g.test(d)) {
       arr.push({
-        from: utils.resolve(d.path),
+        from: utils.resolve(d),
         to: path.resolve(config.build.assetsRoot, config.build.assetsSubDirectory),
         ignore: [ '.*' ]
       })
     }
   })
   css.forEach(function (d) {
-    if (!/^(\/static)/g.test(d.path)) {
+    if (!/^(\/static)/g.test(d)) {
       arr.push({
-        from: utils.resolve(d.path),
+        from: utils.resolve(d),
         to: path.resolve(config.build.assetsRoot, config.build.assetsSubDirectory),
         ignore: [ '.*' ]
       })

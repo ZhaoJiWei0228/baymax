@@ -36,19 +36,19 @@ module.exports = function () {
         var arr = []
         var isDev = process.env.NODE_ENV === 'development'
         externals.forEach(function (d) {
-          if (!/^(\/static)/g.test(d.path) && !isDev) {
-            d._path = d.path.split('/').pop()
-            arr.push(path.join(config.build.assetsPublicPath, config.build.assetsSubDirectory, d._path))
+          if (!/^(\/static)/g.test(d) && !isDev) {
+            _d = d.split('/').pop()
+            arr.push(path.join(config.build.assetsPublicPath, config.build.assetsSubDirectory, _d))
           } else {
-            arr.push(d.path)
+            arr.push(d)
           }
         })
         css.forEach(function (d) {
-          if (!/^(\/static)/g.test(d.path) && !isDev) {
-            d._path = d.path.split('/').pop()
-            arr.push(arr.push(path.join(config.build.assetsPublicPath, config.build.assetsSubDirectory, d._path)))
+          if (!/^(\/static)/g.test(d) && !isDev) {
+            _d = d.split('/').pop()
+            arr.push(path.join(config.build.assetsPublicPath, config.build.assetsSubDirectory, _d))
           } else {
-            arr.push(d.path)
+            arr.push(d)
           }
         })
         return arr
