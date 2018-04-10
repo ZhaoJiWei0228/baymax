@@ -12,7 +12,7 @@ var existsSync = fs.existsSync
 var join = path.join
 
 var error = null;
-var { wp, resolve } = require('../bin/utils')
+var { wp, resolve } = require('../utils')
 var configFile = resolve('./mock.config.js')
 var mockDir = resolve('./mock/')
 var appDirectory = resolve()
