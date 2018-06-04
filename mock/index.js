@@ -92,14 +92,6 @@ function realApplyMock(app) {
 	var proxy = config.proxy || {}; 
 	var mock = config.mock || {};
 
-	app.use(bodyParser.json({ limit: '5mb' }));
-	app.use(
-	  bodyParser.urlencoded({
-		extended: true,
-		limit: '5mb',
-	  }),
-	);
-
 	if (proxy.enable) {
 		console.log()
 		console.log("baymax:mock open global proxy")
@@ -140,32 +132,35 @@ function realApplyMock(app) {
 		});
 	}
 
+	app.use(bodyParser.json({ limit: '5mb' }));
+	app.use(
+	  bodyParser.urlencoded({
+		extended: true,
+		limit: '5mb',
+	  }),
+	);
+
   var startIndex = null;
   var lastIndex = null;
-  var mockAPILength = null;
+	var mockAPILength = null;
+	
 	app._router.stack.forEach((item, index) => {
-    if (item.name === 'jsonParser') {
-      startIndex = index;
+    if (item.name === 'expressInit') {
+      startIndex = index + 1;
     }
-	  if (item.name === 'webpackDevMiddleware') {
+	  if (item.name === 'serveStatic') {
 		  lastIndex = index;
     }
 	});
 
   // 更新中间件
 	if (lastIndex) {
-    if (lastIndex < startIndex) {
-      mockAPILength = app._router.stack.length - startIndex;
-      var newStack = app._router.stack.splice(startIndex, mockAPILength);
-      app._router.stack.splice(lastIndex - 1, 0, ...newStack);
-      startIndex = lastIndex - 1
-      lastIndex = startIndex + mockAPILength + 1
-    } else {
-      mockAPILength = lastIndex - 2;
-    }
+    mockAPILength = app._router.stack.length - lastIndex - 1;
+		var newStack = app._router.stack.splice(lastIndex + 1, mockAPILength);
+		app._router.stack.splice(startIndex, 0, ...newStack);
 	} else {
     mockAPILength = app._router.stack.length - startIndex;
-  }
+	}
 
 	var watcher = chokidar.watch([configFile, mockDir], {
 	  ignored: /node_modules/,
@@ -175,8 +170,9 @@ function realApplyMock(app) {
 	  console.log(chalk.green('CHANGED'), path.replace(appDirectory, '.'));
 	  watcher.close();
 
-	  // 删除旧的 mock api
-	  app._router.stack.splice(startIndex, mockAPILength);
+		// 删除旧的 mock api
+		
+		app._router.stack.splice(startIndex, mockAPILength);
 	  applyMock(app);
 	});
   }
