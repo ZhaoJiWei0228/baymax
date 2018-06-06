@@ -39,7 +39,7 @@ var webpackConf = {
   externals: (function () {
     var conf = {}
     config.externals.forEach(function (item) {
-      conf[ item.package ] = item.var
+      conf[ item.var ] = item.package
     })
     return conf
   })(),

@@ -36,11 +36,11 @@ module.exports = function () {
         var arr = []
         var isDev = process.env.NODE_ENV === 'development'
         externals.forEach(function (d) {
-          if (!/^(\/static)/g.test(d) && !isDev) {
-            _d = d.split('/').pop()
+          if (!/^(\/static)/g.test(d.url) && !isDev) {
+            _d = d.url.split('/').pop()
             arr.push(path.join(config.build.assetsPublicPath, config.build.assetsSubDirectory, _d))
           } else {
-            arr.push(d)
+            arr.push(d.url)
           }
         })
         css.forEach(function (d) {
