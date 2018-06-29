@@ -1,6 +1,6 @@
 {
   "name": "@didi/baymax-scripts",
-  "version": "1.0.1-2",
+  "version": "1.0.1-4",
   "description": "vue dev and build scripts",
   "bin": {
     "baymax-scripts": "./bin/index.js"
@@ -62,6 +62,7 @@
     "mockjs": "^1.0.1-beta3",
     "opn": "^5.1.0",
     "optimize-css-assets-webpack-plugin": "^2.0.0",
+    "postcss-loader": "^2.1.5",
     "rimraf": "^2.6.0",
     "semver": "^5.3.0",
     "shelljs": "^0.7.6",
