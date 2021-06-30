@@ -1,9 +1,9 @@
 {
-  "name": "@didi/baymax-scripts",
+  "name": "@zhaojiwei/baymax-scripts",
   "version": "1.1.0",
   "description": "vue dev and build scripts",
   "bin": {
-    "baymax-scripts": "./bin/index.js"
+    "baymax-scripts": "bin/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -83,5 +83,11 @@
     "webpack-dev-middleware": "^1.10.0",
     "webpack-hot-middleware": "~2.21.2",
     "webpack-merge": "^4.1.0"
+  },
+  "main": "index.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZhaoJiWei0228/baymax.git"
   }
 }
