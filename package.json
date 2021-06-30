@@ -23,7 +23,7 @@
     "mock",
     "utils"
   ],
-  "author": "hahacoo",
+  "author": "zhaojiwei",
   "license": "MIT",
   "dependencies": {
     "babel-eslint": "^8.2.2",
