@@ -1,6 +1,6 @@
 {
   "name": "@zhaojiwei/baymax-scripts",
-  "version": "1.2.13",
+  "version": "1.2.14",
   "description": "vue dev and build scripts",
   "bin": {
     "baymax-scripts": "./bin/index.js"
