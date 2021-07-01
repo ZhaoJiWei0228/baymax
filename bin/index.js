@@ -1,23 +1,44 @@
 #!/usr/bin/env node
 
-var chalk = require('chalk')
-var cmd = process.argv[ 2 ] || 'start'
-var presetCmds = {
-  'start': 'dev-server',
-  'build': 'build',
-  'dll': 'dll'
+var program = require('commander')
+
+program
+  .version(require('../package').version)
+  .description('Cli for Front-End develop, based on Vue')
+  .usage('<command>')
+
+program
+  .command('start')
+  .description('Start a development server')
+  .action(function(){
+    require('./dev-server')
+  })
+
+program
+  .command('dll')
+  .description('Build DLL dependencies')
+  .action(function(){
+    require('./dll')
+  })
+
+program
+  .command('build')
+  .description('Build code for production environments')
+  .action(function(){
+    require('./build')
+  })
+
+program
+  .command('deploy')
+  .description('Publish code to the remote server')
+  .action(function(){
+    require('./deploy')
+  })
+
+program.parse(process.argv);
+
+function help() {
+  program.args.length < 1 && program.help()
 }
 
-if (!(cmd in presetCmds)) {
-  console.log(chalk.red('Unkown command "' + cmd + '"!'))
-  console.log()
-  console.log(chalk.dim('Available commands:'))
-  console.log()
-  console.log('    ' + 'start:' + chalk.dim('启动一个开发服务器'))
-  console.log()
-  console.log('    ' + 'build:' + chalk.dim('编译生产环境用的代码'))
-  console.log()
-  process.exit(1)
-}
-
-require('./' + presetCmds[ cmd ])
+help()

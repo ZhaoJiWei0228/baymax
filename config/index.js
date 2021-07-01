@@ -1,10 +1,8 @@
 // see http://vuejs-templates.github.io/webpack for documentation.
 var fs = require('fs')
 var path = require('path')
-var chalk = require('chalk')
 var customConfig = path.resolve(process.cwd(), 'custom.config.js')
 var customConf = {}
-var localConf = {}
 
 // import custom.config.js
 if (fs.existsSync(customConfig)) {
@@ -14,13 +12,24 @@ if (fs.existsSync(customConfig)) {
   process.exit(1)
 }
 
-
-// 加载custom.config.js中的环境变量
+// load custom.config.js env
 if (typeof customConf.env === 'object') {
   Object.keys(customConf.env).forEach(d => {
     process.env[d] = customConf.env[d]
   })
 }
+
+/**
+ * multiEntry = [
+ *  {
+ *    name: '',
+ *    entry: '',
+ *    title: '',
+ *    filename: '',
+ *    template: ''
+ *  }
+ * ]
+ */
 
 module.exports = {
   build: {
@@ -29,7 +38,7 @@ module.exports = {
     assetsRoot: path.resolve(process.cwd(), 'dist'),
     assetsSubDirectory: 'static',
     assetsPublicPath: customConf.publicPath || '/',
-    productionSourceMap: true,
+    productionSourceMap: customConf.productionSourceMap,
     // Gzip off by default as many popular static hosts such as
     // Surge or Netlify already gzip all static assets for you.
     // Before setting to `true`, make sure to:
@@ -40,7 +49,9 @@ module.exports = {
     // View the bundle analyzer report after build finishes:
     // `npm run build --report`
     // Set to `true` or `false` to always turn it on or off
-    bundleAnalyzerReport: process.env.npm_config_report
+    bundleAnalyzerReport: process.env.npm_config_report,
+    // injecting <link rel='preload|prefecth'> into HtmlWebpackPlugin pages, with async chunk support
+    preload: customConf.preload
   },
   dev: {
     env: require('./dev.env'),
@@ -48,6 +59,7 @@ module.exports = {
     autoOpenBrowser: !!customConf.openBrowser,
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
+    devtool: customConf.devtool || 'cheap-module-eval-source-map',
     // CSS Sourcemaps off by default because relative paths are "buggy"
     // with this option, according to the CSS-Loader README
     // (https://github.com/webpack/css-loader#sourcemaps)
@@ -74,11 +86,13 @@ module.exports = {
   })(),
   typescript: customConf.typescript,
   entry: customConf.entry || './src/main',
+  multiEntry: customConf.multiEntry,
   routePrefix: (customConf.router.routePrefix || '').replace(/\/$/, ''),
   routeIgnore: customConf.router.ignore,
   lazyLoad: customConf.router.lazyLoad,
   css: customConf.css || [],
   favicon: customConf.favicon || '',
   externals: customConf.externals || [],
+  define: customConf.define || {},
   custom: customConf
 }

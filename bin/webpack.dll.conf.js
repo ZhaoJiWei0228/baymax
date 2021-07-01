@@ -3,6 +3,7 @@ var webpack = require('webpack')
 var path = require('path')
 
 module.exports = {
+  mode: 'production',
   output: {
     path: config.dll.outputPath,
     filename: '[name].js',

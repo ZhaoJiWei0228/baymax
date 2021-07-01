@@ -1,7 +1,9 @@
 var _ = require('lodash')
+var chalk = require('chalk')
+var figures = require('figures')
 var path = require('path')
 var config = require('../config')
-var ExtractTextPlugin = require('extract-text-webpack-plugin')
+var MiniCssExtractPlugin = require("mini-css-extract-plugin")
 var resolve = path.resolve
 var sep = path.sep
 var relative = path.relative
@@ -11,7 +13,6 @@ var sysSep = _.escapeRegExp(sep)
 var normalize = string => string.replace(reqSep, sysSep)
 
 function wp(p) {
-	/* istanbul ignore if */
 	if (/^win/.test(process.platform)) {
 	  p = p.replace(/\\/g, '\/')
 	}
@@ -35,7 +36,6 @@ function relativeTo(dir, p) {
 
 exports.wp = wp
 
-
 exports.r = r
 
 exports.relativeTo = relativeTo
@@ -44,8 +44,8 @@ exports.resolve = function () {
   var dir = path.join.apply(null, arguments)
   return path.join(process.cwd(), dir)
 }
-
 exports.assetsPath = function (_path) {
+  
   var assetsSubDirectory = process.env.NODE_ENV === 'production'
     ? config.build.assetsSubDirectory
     : config.dev.assetsSubDirectory
@@ -82,10 +82,7 @@ exports.cssLoaders = function (options) {
     // Extract CSS when that option is specified
     // (which is the case during production build)
     if (options.extract) {
-      return ExtractTextPlugin.extract({
-        use: loaders,
-        fallback: 'vue-style-loader'
-      })
+      return [MiniCssExtractPlugin.loader].concat(loaders)
     } else {
       return ['vue-style-loader'].concat(loaders)
     }
@@ -115,4 +112,33 @@ exports.styleLoaders = function (options) {
     })
   }
   return output
+}
+
+exports.clearTerminal = function () {
+  process.stdout.write('\033c')
+}
+
+function output(module, msg, figure = figures.bullet) {
+  console.log([chalk.green(figure), chalk.green('[baymax] ' + module), msg].join(' '))
+}
+
+exports.log = function (module, msg, figure) {
+  output(module, msg, figure)
+}
+
+exports.done = function (module, msg) {
+  output(module, msg, figures.tick)
+}
+
+exports.success = function (module, msg) {
+  output(module, chalk.green(msg), figures.radioOn)
+}
+
+exports.warnig = function (module, msg) {
+  output(module, chalk.yellow(msg))
+}
+
+exports.fail = function (module, msg) {
+  output(module, chalk.red(msg))
+  process.exit(1)
 }

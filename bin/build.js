@@ -1,8 +1,6 @@
 require('./check-versions')()
-
 process.env.NODE_ENV = 'production'
-
-var fs = require('fs')
+var _ = require('lodash')
 var rm = require('rimraf')
 var path = require('path')
 var chalk = require('chalk')
@@ -11,20 +9,15 @@ var config = require('../config')
 var generateRouter = require('./generate-router')
 var webpackConfig = require('./webpack.prod.conf')
 
-const SPINNER = 'building for production... '
-const SPINNER_ROUTER = 'generating router... '
-const SPINNER_DONE = chalk.green('✔') + '\n'
-
 run()
 
 async function run() {
   try {
-    process.stdout.write(SPINNER_ROUTER)
-    await generateRouter() // 生成路由
-    process.stdout.write(SPINNER_DONE)
-    process.stdout.write(SPINNER)
-    await removeOldFiles() // 删除上次生成的文件
-    await runWebpack() // 构建
+    if (! _.isArray(config.multiEntry)) {
+      generateRouter()
+    }
+    await removeOldFiles()
+    await runWebpack()
   } catch (e) {
     throw e
   }
@@ -32,7 +25,7 @@ async function run() {
 
 function removeOldFiles() {
   return new Promise((resolve, reject) => {
-    rm(path.join(config.build.assetsRoot, config.build.assetsSubDirectory), err => {
+    rm(path.join(config.build.assetsRoot), err => {
       if (err) throw err
       resolve()
     })

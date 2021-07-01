@@ -2,14 +2,15 @@ var chokidar = require('chokidar')
 var fs = require('fs')
 var glob = require('glob')
 var _ = require('lodash')
-var path = require('path')
-var chalk = require('chalk')
-var { wp, r, relativeTo, resolve } = require('../utils')
+var { relativeTo, resolve, log, done } = require('../utils')
 var config = require('../config')
+var multiEntry = config.multiEntry
+var isMulti = _.isArray(multiEntry)
 
 function cleanChildrenRoutes(routes, isChild = false) {
   var start = -1
   var routesIndex = []
+  
   routes.forEach((route) => {
     if (/-index$/.test(route.name) || route.name === 'index') {
       // Save indexOf 'index' key in name
@@ -137,6 +138,7 @@ function generateRoutesAndFiles() {
   var file = 'routes.js'
   var declaration = 'let routes' 
   var disable = '/* eslint-disable */\n'
+  var files = []
 
   if (config.typescript) {
     file = 'routes.ts'
@@ -144,56 +146,82 @@ function generateRoutesAndFiles() {
     disable = '/* tslint:disable */\n'
   }
 
-  return new Promise((resolve, reject) => {
-    glob('src/pages/**/*.@(vue|js)', { nonull: false, ignore: config.routeIgnore }, (err, files) => {
-      if (err) throw err
-      if (!files.length) {
-        fs.writeFile(`./src/${dir}/${file}`, `${declaration} = []\nexport default routes\n`, (_err) => {
-          if (_err) throw _err
-          resolve()
-        })
-      } else {
-        let routes = createRoutes(files)
-        let components = []
-        let fileContent = disable
-        let routesStr
-        recursiveRoutes(routes, components)
-        _.uniqBy(components, 'name').forEach(d => {
-          fileContent += config.lazyLoad
-            ? `const ${d.name} = resolve => require(['${d.component}'], resolve)\n`
-            : `const ${d.name} = resolve => require('${d.component}')\n`
-        })
-        routesStr = JSON.stringify(routes, null, 2)
-          .replace(/"component": "(\w+?)"/g, `"component": $1`)
-          .replace(/"(\w+?)":/g, '$1:')
-        fileContent += `\n${declaration} = ${routesStr}\n\nexport default routes\n`
-        fs.writeFile(`./src/${dir}/${file}`, fileContent, (_err) => {
-          if (_err) throw _err
-          resolve()
-        })
-      }
+  files = glob.sync('src/pages/**/*.@(vue|js)', { nonull: false, ignore: config.routeIgnore })
+  
+  if (!files.length) {
+    fs.writeFileSync(`./src/${dir}/${file}`, `${declaration} = []\nexport default routes\n`)
+  } else {
+    let routes = createRoutes(files)
+    let components = []
+    let fileContent = disable
+    let routesStr
+    recursiveRoutes(routes, components)
+    _.uniqBy(components, 'name').forEach(d => {
+      fileContent += config.lazyLoad
+        ? `const ${d.name} = resolve => require(['${d.component}'], resolve)\n`
+        : `const ${d.name} = resolve => require('${d.component}')\n`
     })
-  })
+    routesStr = JSON.stringify(routes, null, 2)
+      .replace(/"component": "(\w+?)"/g, `"component": $1`)
+      .replace(/"(\w+?)":/g, '$1:')
+    fileContent += `\n${declaration} = ${routesStr}\n\nexport default routes\n`
+    fs.writeFileSync(`./src/${dir}/${file}`, fileContent)
+  }
+
+  done('router', 'generate routes')
+
+  // return new Promise((resolve, reject) => {
+  //   glob('src/pages/**/*.@(vue|js)', { nonull: false, ignore: config.routeIgnore }, (err, files) => {
+  //     if (err) throw err
+  //     if (!files.length) {
+  //       fs.writeFile(`./src/${dir}/${file}`, `${declaration} = []\nexport default routes\n`, (_err) => {
+  //         if (_err) throw _err
+  //         resolve()
+  //       })
+  //     } else {
+  //       let routes = createRoutes(files)
+  //       let components = []
+  //       let fileContent = disable
+  //       let routesStr
+  //       recursiveRoutes(routes, components)
+  //       _.uniqBy(components, 'name').forEach(d => {
+  //         fileContent += config.lazyLoad
+  //           ? `const ${d.name} = resolve => require(['${d.component}'], resolve)\n`
+  //           : `const ${d.name} = resolve => require('${d.component}')\n`
+  //       })
+  //       routesStr = JSON.stringify(routes, null, 2)
+  //         .replace(/"component": "(\w+?)"/g, `"component": $1`)
+  //         .replace(/"(\w+?)":/g, '$1:')
+  //       fileContent += `\n${declaration} = ${routesStr}\n\nexport default routes\n`
+  //       fs.writeFile(`./src/${dir}/${file}`, fileContent, (_err) => {
+  //         if (_err) throw _err
+  //         resolve()
+  //       })
+  //     }
+  //   })
+  // })
 }
 
 const refreshFiles = _.debounce(() => {
-  console.log(chalk.green('路由变更...'))
   generateRoutesAndFiles()
 }, 200)
 
 module.exports = function() {
+  if(isMulti) return
+
   const patterns = [
     resolve('src/pages/*.vue'),
     resolve('src/pages/**/*.vue'),
     resolve('src/pages/*.js'),
     resolve('src/pages/**/*.js')
   ]
+
   if (process.env.NODE_ENV !== 'development') {
-    return generateRoutesAndFiles() // 不是开发模式不需要watch
+    return generateRoutesAndFiles()
   } else {
-	generateRoutesAndFiles()
-    chokidar.watch(patterns, { ignored: config.routeIgnore, ignoreInitial: true }) // 初始化时不触发
-      .on('add', () => { console.log('onadd'); refreshFiles() })
-      .on('unlink', () => { console.log('onunlink'); refreshFiles() })
+	  generateRoutesAndFiles()
+    chokidar.watch(patterns, { ignored: config.routeIgnore, ignoreInitial: true })
+      .on('add', () => { log('router', 'onadd'); refreshFiles() })
+      .on('unlink', () => { log('router', 'onunlink'); refreshFiles() })
   }
 }

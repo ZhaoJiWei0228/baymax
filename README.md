@@ -4,11 +4,13 @@ vue dev and build scripts
 
 ## 安装
 
-现在仍在测试阶段，尚未发布到私服上，`git clone`本地之后，执行`npm install`，安装完依赖再执行`npm link`，添加到全局。
+```shell
+npm install @didi/baymax-scirpt -D
+```
 
 ## 使用
 
-```
+```shell
 # 开发模式
 baymax-scripts start
 # 生产模式

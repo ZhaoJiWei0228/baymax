@@ -1,32 +1,33 @@
 var path = require('path')
+var _ = require('lodash')
 var utils = require('../utils')
-var webpack = require('webpack')
 var config = require('../config')
 var merge = require('webpack-merge')
 var baseWebpackConfig = require('./webpack.base.conf')
+var UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 var CopyWebpackPlugin = require('copy-webpack-plugin')
-var ExtractTextPlugin = require('extract-text-webpack-plugin')
+var MiniCssExtractPlugin = require("mini-css-extract-plugin")
 var OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
+var PreloadWebpackPlugin = require('preload-webpack-plugin');
 
-var env = process.env.NODE_ENV === 'testing'
-  ? require('../config/test.env')
-  : config.build.env
-
+/**
+ * copy asset, include js,css
+ */
 function getCopyAssets () {
   var externals = config.externals
   var css = config.css
   var arr = []
   externals.forEach(function (d) {
-    if (!/^(\/static)/g.test(d)) {
+    if (!/^(\/static|http|https)/g.test(d.url)) {
       arr.push({
-        from: utils.resolve(d),
+        from: utils.resolve(d.url),
         to: path.resolve(config.build.assetsRoot, config.build.assetsSubDirectory),
         ignore: [ '.*' ]
       })
     }
   })
   css.forEach(function (d) {
-    if (!/^(\/static)/g.test(d)) {
+    if (!/^(\/static|http|https)/g.test(d)) {
       arr.push({
         from: utils.resolve(d),
         to: path.resolve(config.build.assetsRoot, config.build.assetsSubDirectory),
@@ -38,6 +39,7 @@ function getCopyAssets () {
 }
 
 var webpackConfig = merge(baseWebpackConfig, {
+  mode: 'production',
   module: {
     rules: utils.styleLoaders({
       sourceMap: config.build.productionSourceMap,
@@ -48,53 +50,52 @@ var webpackConfig = merge(baseWebpackConfig, {
   output: {
     path: config.build.assetsRoot,
     filename: utils.assetsPath('js/[name].[chunkhash].js'),
-    chunkFilename: utils.assetsPath('js/[id].[chunkhash].js')
+    chunkFilename: utils.assetsPath('js/[name].[chunkhash].js')
   },
-  plugins: [
-    // http://vuejs.github.io/vue-loader/en/workflow/production.html
-    new webpack.DefinePlugin({
-      'process.env': env
-    }),
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        warnings: false
-      },
-      sourceMap: true
-    }),
-    // extract css into its own file
-    new ExtractTextPlugin({
-      filename: utils.assetsPath('css/[name].[contenthash].css')
-    }),
-    // Compress extracted CSS. We are using this plugin so that possible
-    // duplicated CSS from different components can be deduped.
-    new OptimizeCSSPlugin({
-      cssProcessorOptions: {
-        safe: true,
-        autoprefixer: {
-          add: false,
-          remove: false
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          name: 'vendor',
+          chunks: 'all',
+          test: /[\\/]node_modules[\\/]/,
+          priority: -10
+        },
+        commons: {
+          name: 'commons',
+          chunks: 'all',
+          minChunks: 2,
+          priority: -20,
+          reuseExistingChunk: true
         }
       }
-    }),
-    // split vendor js into its own file
-    new webpack.optimize.CommonsChunkPlugin({
-      name: 'vendor',
-      minChunks: function (module, count) {
-        // any required modules inside node_modules are extracted to vendor
-        return (
-          module.resource &&
-          /\.js$/.test(module.resource) &&
-          module.resource.indexOf(
-            utils.resolve('node_modules')
-          ) === 0
-        )
-      }
-    }),
-    // extract webpack runtime and module manifest to its own file in order to
-    // prevent vendor hash from being updated whenever app bundle is updated
-    new webpack.optimize.CommonsChunkPlugin({
-      name: 'manifest',
-      chunks: [ 'vendor' ]
+    },
+    runtimeChunk: {
+      name: 'manifest'
+    },
+    minimizer: [
+      new UglifyJsPlugin({
+        cache: true,
+        parallel: true,
+        sourceMap: true
+      }),
+      new OptimizeCSSPlugin({
+        cssProcessorOptions: {
+          safe: true,
+          autoprefixer: {
+            add: false,
+            remove: false
+          }
+        }
+      })
+    ],
+    removeEmptyChunks: true
+  },
+  plugins: [
+    // extract css into its own file
+    new MiniCssExtractPlugin({
+      filename: utils.assetsPath('css/[name].[chunkhash].css'),
+      chunkFilename: utils.assetsPath('css/[name].[chunkhash].css')
     }),
     // copy custom static assets
     new CopyWebpackPlugin([
@@ -105,8 +106,9 @@ var webpackConfig = merge(baseWebpackConfig, {
       }
     ].concat(getCopyAssets()))
   ]
-})
+}, config.custom.build)
 
+// enable Gzip
 if (config.build.productionGzip) {
   var CompressionWebpackPlugin = require('compression-webpack-plugin')
 
@@ -129,5 +131,9 @@ if (config.build.bundleAnalyzerReport) {
   var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
   webpackConfig.plugins.push(new BundleAnalyzerPlugin())
 }
-
+// enable Preload
+if (config.build.preload) {
+  webpackConfig.plugins.push(new PreloadWebpackPlugin(_.isPlainObject(config.build.preload) ? config.build.preload : {}))
+}
+ 
 module.exports = webpackConfig

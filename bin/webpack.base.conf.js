@@ -1,12 +1,14 @@
 var path = require('path')
 var _ = require('lodash')
 var webpack = require('webpack')
-var utils = require('../utils')
 var config = require('../config')
+var utils = require('../utils')
 var vueLoaderConfig = require('./vue-loader.conf')
 var StyleLintPlugin = require('stylelint-webpack-plugin')
 var ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
+var VueLoaderPlugin = require('vue-loader/lib/plugin')
 var htmlPluginConf = require('./html-plugin.conf')
+var WebpackBar = require('webpackbar') //
 
 var customExts = config.custom.extensions || []
 var uniqExtensions = function (defaultExts, exts) {
@@ -14,11 +16,27 @@ var uniqExtensions = function (defaultExts, exts) {
 }
 var context = process.cwd()
 
+function entry() {
+  if (config.multiEntry) {
+    // add multi-entry support
+    if (!_.isArray(config.multiEntry)) {
+      utils.fail('webpack', 'multiEntry value should be array')
+    }
+    var ret = {}
+
+    config.multiEntry.forEach(function(entry) {
+      ret[entry.name] = entry.entry
+    })
+    return ret
+  }
+  return {
+    app: config.entry
+  }
+}
+
 var webpackConf = {
   context: context,
-  entry: {
-    app: config.entry
-  },
+  entry: entry(),
   output: {
     path: config.build.assetsRoot,
     filename: '[name].js',
@@ -88,7 +106,15 @@ var webpackConf = {
       }
     ]
   },
-  plugins: []
+  plugins: [
+    new VueLoaderPlugin(),
+    new webpack.DefinePlugin(config.define),
+    new WebpackBar({
+      name: '[baymax] webpack',
+      color: 'green',
+      compiledIn: false
+    })
+  ]
 }
 
 if (config.typescript) {
@@ -139,15 +165,12 @@ if (config.custom.stylelint) {
   }))
 }
 
-if (
-  typeof config.custom.providers === 'object' &&
-  Object.keys(config.custom.providers).length
-) {
+if (typeof config.custom.providers === 'object' && Object.keys(config.custom.providers).length) {
   webpackConf.plugins.push(new webpack.ProvidePlugin(
     config.custom.providers
   ))
 }
 var plugins = htmlPluginConf()
-webpackConf.plugins.push(plugins.htmlWebpackPlugin)
-webpackConf.plugins.push(plugins.htmlWebpackIncludeAssetsPlugin)
+webpackConf.plugins.push(...plugins.htmlWebpackPlugin)
+webpackConf.plugins.push(...plugins.htmlWebpackIncludeAssetsPlugin)
 module.exports = webpackConf
