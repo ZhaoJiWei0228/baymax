@@ -5,7 +5,7 @@ vue dev and build scripts
 ## 安装
 
 ```shell
-npm install @zhaojiwei/baymax-scirpts -D
+npm i @zhaojiwei/baymax-scripts
 ```
 
 ## 使用
